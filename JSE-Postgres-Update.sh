@@ -2,7 +2,7 @@
 
 # + ----------------------------------------------------------------------------------------------------------------- +
 # |                                                                                                                   |
-# | POSTGRES DATA FILES UPDATE: J. Scott Elblein                                                               WIP    |
+# | POSTGRES DATA FILES UPDATE: J. Scott Elblein                                                                      |
 # |                                                                                                                   |
 # | USAGE                                                                                                             |
 # |   - First, edit the options below to match your setup, and then                                                   |
@@ -23,30 +23,31 @@
 # |                                                                                                                   |
 # | ENHANCEMENTS                                                                                                      |
 # |   - This script COULD just be used to do backups if wanted, w/some added tweaks. i.e. cline args, etc.            |
-# |   - Add user choice between the old fashioned way (back/rest the data), or just use pg_dumpall/pg_upgrade.        |
+# |   - Add user choice between the old fashioned way (back/resto the data), or just use pg_dumpall/pg_upgrade.       |
 # |                                                                                                                   |
 # + ----------------------------------------------------------------------------------------------------------------- +
 
-# + ===================================================================================================== DB SETTINGS +
+# + ============================================================================================== DB SETTINGS (EDIT) +
 
 # Postgres User
 pgs_user="root"
 
-# Postgres password
+# Postgres Password
 pgs_pw=''
 
-# Database
+# Postgres Database
 pgs_db="postgres"
 
-# Network (i.e. Docker network the PGS server is in)
+# Network (i.e. Docker network the Postgres server is in)
 pgs_net="db-postgres"
 
 # + ================================================================================================== OPTIONS (EDIT) +
 
-# Clear screen first? (1=yes)
+# Clear screen first? (0 = no; 1 = yes)
 cls="1"
 
-# Upgrade method (0 = manual method; anything else = pg_dumpall method) (TODO: may abandon this idea)
+# Upgrade method (0 = manual method; anything else = pg_dumpall method)
+# TODO: may abandon this idea; for now leave as 1.
 upgrd_method="1"
 
 # Show debug stuff (logs, etc.) (0 = no; 1 = yes)
@@ -55,7 +56,15 @@ show_dbg="0"
 # Timestamp Format
 tstamp=$(date +"%Y%m%d_%H%M%S")
 
-# PGS Server Versions. The same way you'd add it to your Compose, minus the colon. (i.e. 16.4 or latest))
+# Postgres Server Versions. The same way you'd add the version in your Compose, minus the colon. (i.e. 16.4 or latest)
+# Valid tags are under the 'Supported tags' section here: https://hub.docker.com/_/postgres
+#
+# TIP: Be SURE to use the same versions that you're already using. i.e. if you're using the alpine versions already,
+#      do that here, too.
+#
+# If you get something like "WARNING: database "postgres" has a collation version mismatch" after the upgrade,
+# see this: https://github.com/STaRDoGG/JSE-Postgres-Update/issues/1#issue-2797980240
+#
 pgs_oldver="16.4"
 pgs_newver="latest"
 
@@ -105,7 +114,7 @@ help_a_brother_out="https://buymeacoffee.com/stardogg"
 
 # + ============================================================================================= GLOBALS (DONT EDIT) +
 
-script_ver="1.0"
+script_ver="1.1"
 script_title="J. SCOTT ELBLEIN'S POSTGRES UPGRADE SCRIPT:"
 
 tmp_prefix="/tmp/jse-psql-update"
@@ -206,7 +215,7 @@ fncy_vert="${red}║${rst}"
 rotating_cursor() {
     local pid=$1
     local delay=0.1
-    local spin_chars='|/-\'
+    local spin_chars="|/-\\"
 
     while kill -0 "$pid" 2>/dev/null; do
         for char in $(echo "$spin_chars" | fold -w1); do
@@ -548,7 +557,8 @@ check_user() {
     if [[ "${show_dbg:-0}" -eq 1 ]]; then
 
         # Troubleshooting Check: Get the owner of the directory
-        local local_data_owner=$(stat -c '%U' "$local_data_path")
+        local local_data_owner
+        local_data_owner=$(stat -c '%U' "$local_data_path")$(stat -c '%U' "$local_data_path")
 
         log "\n${dbg_bar_top}"
         log "${dbg_vert}"
@@ -578,7 +588,8 @@ kb_to_mb() {
     fi
 
     local kb=$1
-    local mb=$(echo "scale=2; $kb / 1024" | bc)
+    local mb
+    mb=$(echo "scale=2; $kb / 1024" | bc)
 
     if [ "$(echo -e "$mb < 1" | bc -l)" -eq 1 ]; then
         echo -e "$kb KB"
@@ -668,7 +679,8 @@ backup_db() {
     fi
 
     # Ok, it exists, now check the file size (in KB) (must be equal or greater than $bak_db_minsize)
-    local actual_size=$(du -k "$local_bak_path_full" | cut -f1)
+    local actual_size
+    actual_size=$(du -k "$local_bak_path_full" | cut -f1)
 
     log "   ${cyn}¤ Validating DB backup size vs. minimum size you set (${rst}${bak_db_minsize} ${cyn}KB)${rst}"
 
