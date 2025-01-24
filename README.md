@@ -12,30 +12,30 @@ since that is what I use, but I would imagine with minor tweaks it could easily 
 
 ## What it Does
 
-- Creates a temporary "old" version container (the current one with the data to upgrade).
+- Creates a temporary Postgres "old" version container (the version with your current data to upgrade).
 - Backs up your database(s) on the "old" version server to a .sql file.
 - Compares the backed up .sql size to a minimum size you've set in the script config.
 - Backs up your Data directory into a .tar archive.
-- Compares the Data directory with the archive to be sure it is identical.
-- Copies the backed-up .sql file into the backed-up Data archive, so you have all backups in 1 place.
+- Compares the Data directory with that archive to be sure they're identical.
+- Copies the backed-up .sql file into the archive, so you have all backups in 1 place.
 - Optionally compresses the archive with Gzip or Bzip2
 - Moves the archive to your chosen final resting place for it.
 - Prepares the Data directory for the upgrade; validates User, permissions, etc.
-- Creates a temporary "new" version container (the one upgrading to).
+- Creates a temporary Postgres "new" version container (the version upgrading to).
 - Imports/Restores the backed-up .sql into the new Postgres version.
 
 Then cleans up after itself.
 
-After that, all you need to do is start the new version as you normally would and it's all upgraded.
+After that, all you need to do is start the new version as you normally would, and it's all upgraded.
 
 ## Reason for Living
 
-I've been using `postgres:latest` (in a container) since around version 13 and it seems that Postgres updates major versions surprisingly
-often, killing all other containers that use a PGS database until I do these steps manually.
-And personally, I've found having to stop everything, look up all the steps and remember the procedure, then do them
-by hand a bit of a [PITA](https://www.urbandictionary.com/define.php?term=pita).
+I've been using `postgres:latest` since around version 13 and it seems that Postgres updates major versions surprisingly
+often, killing all other containers that use a PGS database until I do all these steps manually,
+and personally, I've found having to stop everything I'm doing, look up all these steps to remember the procedure, then do them
+by hand to be a bit of a [PITA](https://www.urbandictionary.com/define.php?term=pita).
 
-So I took some time out to write this to save me even more time in the future. Thus it was born.
+So I took some time out to write this now, to save me even more time in the future. Thus it was born.
 
 So far this same procedure has worked for me through versions 13-17 without issue.
 
@@ -52,7 +52,7 @@ So far this same procedure has worked for me through versions 13-17 without issu
 After it's done, you'll have a full backup of your SQL and Data, and the newer version of Postgres will have
 all of your data migrated. Just fire the new version up as you always do, using the new version tag.
 
-This is it's "hello world" release, so I'm sure I might've mist some edge cases, and such. If so let me know in the issues.
+This is it's "hello world" release, so I'm sure I might've missed some edge cases, and such. If so let me know in the issues.
 
 ## Screenshot
 ![Screenshot](screenshots/J-Scott-Elblein-Postgres-Upgrade-Script.jpg)
